@@ -9,6 +9,8 @@ WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
+RUN powershell -Command New-LocalUser -Name ContainerUser -NoPassword
+USER ContainerUser
 
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:9.0-nanoserver-1809 AS build
