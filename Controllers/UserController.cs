@@ -1,9 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using Microsoft.AspNetCore.Mvc;
 using UdenDockerApi.Models;
 using UdenDockerApi.Context;
-
+using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 using Microsoft.EntityFrameworkCore;
 
 namespace UdenDockerApi.Controllers
@@ -40,6 +39,81 @@ namespace UdenDockerApi.Controllers
             var user = await _Context.Users.ToListAsync();
 
             return Ok(user);
+        }
+
+        [HttpGet("FromQuery")]
+        public async Task<IActionResult> GetAllUsersFromQuery([FromQuery] string username, [FromQuery] string password)
+        {
+            var users = await _Context.Users.FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower() && u.Password == password);
+
+
+            
+
+            return Ok(users);
+        }
+        [HttpPut]
+        public async Task<IActionResult> UpdateUser(string id, [FromBody] User updatedUser)
+        {
+            var user = await _Context.Users.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound("Not found");
+            }
+            user.Username = updatedUser.Username;
+            user.Email = updatedUser.Email;
+            user.Password = updatedUser.Password;
+
+            await _Context.SaveChangesAsync();
+
+            return Ok(user);
+        }
+        [HttpPut("Query")]
+        public async Task<IActionResult> UpdateUserQuery(string id, [FromQuery] User updatedUser)
+        {
+            var user = await _Context.Users.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound("Not found");
+            }
+            user.Username = updatedUser.Username;
+            user.Email = updatedUser.Email;
+            user.Password = updatedUser.Password;
+
+            await _Context.SaveChangesAsync();
+
+            return Ok(user);
+        }
+        [HttpPatch]
+        public async Task<IActionResult> PatchUpdateUser(string id, [FromQuery] UserDto user)
+        {
+            var existingUser = await _Context.Users.FindAsync(id);
+
+
+            if (!string.IsNullOrEmpty(user.Username))
+            {
+                existingUser.Username = user.Username;
+            }
+            if (!string.IsNullOrEmpty(user.Email))
+            {
+                existingUser.Email = user.Email;
+            }
+            if (!string.IsNullOrEmpty(user.Password))
+            {
+                existingUser .Password = user.Password;
+            }
+            await _Context.SaveChangesAsync();
+
+            return Ok(existingUser);
+        }
+        
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            var user = await _Context.Users.FindAsync(id);
+            _Context.Users.Remove(user);
+            await _Context.SaveChangesAsync();
+            return(Ok());
         }
 
     } 
